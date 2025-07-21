@@ -1,5 +1,7 @@
 #include "kcstd/string.h"
 
+#include "kcstd/char.h"
+#include "kcstd/limits.h"
 #include "kcstd/memory.h"
 #include "kcstd/types.h"
 
@@ -19,9 +21,9 @@ int str_cmp(string a, string b) {
   return *(byte*)a - *(byte*)b;
 }
 
-int str_cmp_lmt(string a, string b, size_t lmt) {
+int str_cmp_ofs(string a, string b, size_t ofs) {
   size_t i = 0;
-  while (i < lmt) {
+  while (i < ofs) {
     if (a[i] != b[i]) {
       return (byte)a[i] - (byte)b[i];
     }
@@ -61,13 +63,13 @@ string str_copy(string dest, string src) {
   return og_d;
 }
 
-string str_copy_lmt(string dest, string src, size_t lmt) {
+string str_copy_ofs(string dest, string src, size_t ofs) {
   size_t i = 0;
-  while (i < lmt && src[i] != NULL_TERMINATOR) {
+  while (i < ofs && src[i] != NULL_TERMINATOR) {
     dest[i] = src[i];
     i++;
   }
-  while (i < lmt) {
+  while (i < ofs) {
     dest[i] = NULL_TERMINATOR;
     i++;
   }
@@ -97,9 +99,74 @@ string str_substring(const string str, size_t start, size_t end) {
   return result;
 }
 
-bool str_starts_with(string str, string start_with, size_t offset) {
-  if (str_cmp_lmt(str + offset, start_with, str_len(start_with)) == 0) {
+bool str_starts_with(string str, string start_with) {
+  if (str_cmp_ofs(str, start_with, str_len(start_with)) == 0) {
     return true;
   }
   return false;
+}
+
+bool str_starts_with_ofs(string str, string start_with, size_t offset) {
+  if (str_cmp_ofs(str + offset, start_with, str_len(start_with)) == 0) {
+    return true;
+  }
+  return false;
+}
+
+long str_tol(string nptr, string* endptr, int base) {
+  string s = nptr;
+  long result = 0;
+  int sign = 1;
+
+  // skip spaces
+  while (is_space(*s))
+    s++;
+
+  // trheat signal
+  if (*s == '-') {
+    sign = -1;
+    s++;
+  } else if (*s == '+') {
+    s++;
+  }
+
+  // Detect base auto
+  if ((base == 0 || base == 16) && s[0] == '0' &&
+      (s[1] == 'x' || s[1] == 'X')) {
+    base = 16;
+    s += 2;
+  } else if (base == 0 && s[0] == '0') {
+    base = 8;
+    s++;
+  } else if (base == 0) {
+    base = 10;
+  }
+
+  // Digit-Digit Convertion
+  while (*s) {
+    int digit;
+    if (is_digit(*s))
+      digit = *s - '0';
+    else if (is_alpha(*s))
+      digit = to_lower(*s) - 'a' + 10;
+    else
+      break;
+
+    if (digit >= base)
+      break;
+
+    // Overflow check
+    if (result > (LONG_MAX - digit) / base) {
+      result = LONG_MAX;
+      break;
+    }
+
+    result = result * base + digit;
+    s++;
+  }
+
+  if (endptr)
+    *endptr = (string)s;
+
+  return sign * result;
 }

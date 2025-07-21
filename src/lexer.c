@@ -20,41 +20,6 @@ void sasm_lexer_delete(sasm_lexer* self) {
   memory_free(self);
 }
 
-void sasm_token_add(sasm_token** head,
-                    string value,
-                    sasm_token_type type,
-                    size_t line,
-                    size_t col) {
-  sasm_token* new_token = memory_alloc(sizeof(sasm_token));
-  new_token->type = type;
-  new_token->value = str_dup(value);
-  new_token->line = line;
-  new_token->col = col;
-  new_token->next = null;
-
-  if (*head == null) {
-    *head = new_token;
-  } else {
-    sasm_token* current = *head;
-    while (current->next)
-      current = current->next;
-    current->next = new_token;
-  }
-}
-
-string sasm_token_type_tostr(sasm_token_type type) {
-  switch (type) {
-    case TOKEN_KEYWORD:
-      return "Keyword";
-    case TOKEN_IDENTIFIER:
-      return "Identifer";
-    case TOKEN_COMMA:
-      return "Comma";
-    case TOKEN_COLON:
-      return "Colon";
-  };
-}
-
 void sasm_lexer_advance(sasm_lexer* self) {
   if (self->input[self->pos] == '\n') {
     self->line++;
@@ -84,9 +49,20 @@ void sasm_lexer_tokenize(sasm_lexer* self) {
         sasm_token_add(&self->tokens, ",", TOKEN_COMMA, self->line, self->col);
         sasm_lexer_advance(self);
         continue;
+      case '[':
+        sasm_token_add(&self->tokens, "[", TOKEN_LBRACKET, self->line,
+                       self->col);
+        sasm_lexer_advance(self);
+        continue;
+      case ']':
+        sasm_token_add(&self->tokens, "]", TOKEN_RBRACKET, self->line,
+                       self->col);
+        sasm_lexer_advance(self);
+        continue;
     };
 
-    if (str_starts_with(self->input, ";", self->pos)) {
+    // comments (starting with ;)
+    if (str_starts_with_ofs(self->input, ";", self->pos)) {
       self->pos += 2;
       while (self->pos < input_len && self->input[self->pos] != '\n') {
         sasm_lexer_advance(self);
@@ -94,6 +70,34 @@ void sasm_lexer_tokenize(sasm_lexer* self) {
       continue;
     }
 
+    // hexadecimal or decimal number (starts with digit or 0x)
+    if (is_digit(ch)) {
+      size_t start = self->pos;
+
+      if (self->input[self->pos] == '0' && (self->pos + 1 < input_len) &&
+          (self->input[self->pos + 1] == 'x' ||
+           self->input[self->pos + 1] == 'X')) {
+        // hexadecimal
+        sasm_lexer_advance(self);  // consume '0'
+        sasm_lexer_advance(self);  // consume 'x' or 'X'
+        while (self->pos < input_len && is_hex_digit(self->input[self->pos])) {
+          sasm_lexer_advance(self);
+        }
+      } else {
+        // decimal
+        while (self->pos < input_len && is_digit(self->input[self->pos])) {
+          sasm_lexer_advance(self);
+        }
+      }
+
+      string num = str_substring(self->input, start, self->pos);
+      sasm_token_add(&self->tokens, num, TOKEN_IDENTIFIER, self->line,
+                     self->col);
+      memory_free(num);
+      continue;
+    }
+
+    // identifiers and keywords
     if (is_alpha(ch) || ch == '_') {
       size_t start = self->pos;
       while (self->pos < input_len && (is_alpha(self->input[self->pos]) ||
@@ -106,8 +110,9 @@ void sasm_lexer_tokenize(sasm_lexer* self) {
         printf("Error[%d:%d]: Failed to get word", self->line, self->col);
         break;
       }
-      if (str_equals(word, "mov") || str_equals(word, "add") ||
-          str_equals(word, "sub") || str_equals(word, "div")) {
+      if (str_equals(word, "MOV") || str_equals(word, "ADD") ||
+          str_equals(word, "SUB") || str_equals(word, "DIV") ||
+          str_equals(word, "INT")) {
         sasm_token_add(&self->tokens, word, TOKEN_KEYWORD, self->line,
                        self->col);
       } else {
@@ -117,7 +122,10 @@ void sasm_lexer_tokenize(sasm_lexer* self) {
       memory_free(word);
       continue;
     }
-    // other cases ahhhhhhhhhhhshshss
+
+    // just ignore the invalid char
     sasm_lexer_advance(self);
   }
+
+  sasm_token_add(&self->tokens, "", TOKEN_EOF, self->line, self->col);
 }

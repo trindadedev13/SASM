@@ -1,7 +1,35 @@
 main:
-        ; Pixel at Y=0 X = X0
-        MOV      R, 0xFF  ; R = 255
-        MOV      G, 0xFF  ; G = 255
-        MOV      B, 0xFF  ; B = 255
-        MOV      A, 0x01  ; A = 255
-        INT      0x10     ; Stack Pixel In Pixels Matrix
+        MOV    B, 0x00    ; B = 0x05
+
+        ; Print The Number (B)
+        MOV    A, B       ; A = B
+        MOV    D, 0x01    ; Syscall PUTI
+        INT    0x80       ; Perform Syscall
+
+        ; Print \n
+        MOV    A, 0x0A    ; A = 0x0A (\n)
+        MOV    D, 0x02    ; Syscall PUTC
+        INT    0x80       ; Perform Syscall
+
+        ADD    B, 0xA     ; A = B + 0xA (10)
+
+        ; Print The Number (B)
+        MOV    A, B       ; A = B
+        MOV    D, 0x01    ; Syscall PUTI
+        INT    0x80       ; Perform Syscall
+
+        ; Print \n
+        MOV    A, 0x0A    ; A = 0x0A (\n)
+        MOV    D, 0x02    ; Syscall PUTC
+        INT    0x80       ; Perform Syscall
+
+        SUB    B, 0x03    ; B = B - 3
+
+        MOV    A, B       ; A = B
+        MOV    D, 0x01    ; Syscall PUTI
+        INT    0x80       ; Perform Syscall
+
+        ; Print \n
+        MOV    A, 0x0A    ; A = 0x0A (\n)
+        MOV    D, 0x02    ; Syscall PUTC
+        INT    0x80       ; Perform Syscall

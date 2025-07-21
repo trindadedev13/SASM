@@ -2,7 +2,10 @@
 #include "kcstd/memory.h"
 #include "kcstd/string.h"
 
+#include "sasm/interpreter.h"
 #include "sasm/lexer.h"
+#include "sasm/parser.h"
+#include "sasm/regs.h"
 
 int sasm_err(int s, string m) {
   printf("Err(%d): %s\n", s, m);
@@ -14,7 +17,6 @@ int main(int argc, string argv[]) {
     return sasm_err(1, "Please provide one file");
 
   string filename = argv[1];
-  printf("%s\n", filename);
 
   /** Open the file */
   file* file = file_open(filename, FILE_MODE_READ);
@@ -33,13 +35,29 @@ int main(int argc, string argv[]) {
 
   sasm_lexer* lexer = sasm_lexer_new(content);
   sasm_lexer_tokenize(lexer);
-  sasm_token* current_token = lexer->tokens;
-  while (current_token != null) {
-    printf("\nToken{\n\ttype=%s,\n\tvalue=%s,\n\tline=%d,\n\tcol=%d\n}",
-           sasm_token_type_tostr(current_token->type), current_token->value,
-           current_token->line, current_token->col);
-    current_token = current_token->next;
-  }
+
+  // sasm_token* current_token = lexer->tokens;
+  // while (current_token != null) {
+  // printf("Token{\n\ttype=%s,\n\tvalue=%s,\n\tline=%d,\n\tcol=%d\n}\n",
+  // sasm_token_type_tostr(current_token->type), current_token->value,
+  // current_token->line, current_token->col);
+  // current_token = current_token->next;
+  // }
+
+  sasm_parser* parser = sasm_parser_new(lexer->tokens);
+  sasm_parser_parse(parser);
+
+  // sasm_node* current_node = parser->nodes;
+  // while (current_node != null) {
+  // sasm_node_print(current_node);
+  // current_node = current_node->next;
+  // }
+
+  sasm_interpreter* interpreter = sasm_interpreter_new(parser->nodes);
+  sasm_interpreter_run(interpreter);
+
+  // printf("{\n\tA = %d\n\tB = %d\n\tC = %d\n\tD = %d\n}\n", sasm_regs_getA(),
+  // sasm_regs_getB(), sasm_regs_getC(), sasm_regs_getD());
 
   memory_free(content);
   file_close(file);

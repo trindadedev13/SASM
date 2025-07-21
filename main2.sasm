@@ -1,0 +1,54 @@
+; Primitive Hello, World in SASM
+
+main:
+MOV      A, 0x48    ; H
+MOV      D, 0x02
+INT      0x80
+
+MOV      A, 0x65    ; e
+MOV      D, 0x02
+INT      0x80
+
+MOV      A, 0x6C    ; l
+MOV      D, 0x02
+INT      0x80
+
+MOV      A, 0x6C    ; l
+MOV      D, 0x02
+INT      0x80
+
+MOV      A, 0x6F    ; o
+MOV      D, 0x02
+INT      0x80
+
+MOV      A, 0x2C    ; ,
+MOV      D, 0x02
+INT      0x80
+
+MOV      A, 0x20    ; (espaço)
+MOV      D, 0x02
+INT      0x80
+
+MOV      A, 0x57    ; W
+MOV      D, 0x02
+INT      0x80
+
+MOV      A, 0x6F    ; o
+MOV      D, 0x02
+INT      0x80
+
+MOV      A, 0x72    ; r
+MOV      D, 0x02
+INT      0x80
+
+MOV      A, 0x6C    ; l
+MOV      D, 0x02
+INT      0x80
+
+MOV      A, 0x64    ; d
+MOV      D, 0x02
+INT      0x80
+
+MOV      A, 0x0A    ; \n (nova linha)
+MOV      D, 0x02
+INT      0x80

@@ -1,0 +1,21 @@
+; ITS IMPLEMENTED YET
+; JUST EXAMPLE
+
+hi: db 0x48, 0x64, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x27, 0x6f, 0x72, 0x6C, 0x64, 0x0a, 0x00
+
+main:
+        MOV     SI, hi
+        CALL    PrintString
+
+PrintString:
+        MOV     D, 0x01
+        MOV     A, *SI                     ; a = *si  (current char)
+        PrintString.Loop:
+                INT      0x80
+
+                INC      SI                ; si = si + 1; (next char)
+                MOV      A, *SI
+
+                CMP      A, 0x00           ; a == 0x00 (null)
+                JNE      PrintString.Loop  ; print next char if Char not equals 0x00 (null)
+        RET

@@ -29,10 +29,10 @@
 // String
 #define strlen(str) str_len(str)
 #define strcmp(a, b) str_cmp(a, b)
-#define strncmp(a, b, lmt) str_cmp_lmt(a, b, lmt)
+#define strncmp(a, b, ofs) str_cmp_ofs(a, b, ofs)
 #define strcat(src, new) str_cat(src, new)
 #define strcpy(dest, src) str_copy(dest, dest)
-#define strncpy(dest, src, lmt) str_copy_lmt(dest, src, lmt)
+#define strncpy(dest, src, ofs) str_copy_ofs(dest, src, ofs)
 #define strdup(src) str_dup(src)
 
 // Char

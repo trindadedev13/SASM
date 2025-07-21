@@ -2,27 +2,7 @@
 #define __LEXER_H__
 
 #include "kcstd/types.h"
-
-typedef enum {
-  TOKEN_KEYWORD,     // mov, add, div, sub, mul
-  TOKEN_IDENTIFIER,  // Name
-  TOKEN_COLON,       // :
-  TOKEN_COMMA        // ,
-} sasm_token_type;
-
-typedef struct sasm_token sasm_token;
-
-struct sasm_token {
-  string value;
-  sasm_token_type type;
-  size_t line;
-  size_t col;
-  sasm_token* next;
-};
-
-void sasm_token_add(sasm_token**, string, sasm_token_type, size_t, size_t);
-
-string sasm_token_type_tostr(sasm_token_type);
+#include "sasm/token.h"
 
 typedef struct {
   sasm_token* tokens;
