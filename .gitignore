@@ -1,2 +1,3 @@
 sasm.elf
 build/
+libc/build/
