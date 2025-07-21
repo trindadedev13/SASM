@@ -1,0 +1,21 @@
+// MT MANAGER SYNTAX
+{
+name: ["Sasm", ".sasm"]
+styles: [
+"preprocessor" > "meta"
+]
+comment: {startsWith: ";"}
+contains: [
+{builtin: #C_QUOTED_STRING#}
+{builtin: #C_NUMBER#}
+{match: /(?m)^[ \t]*(#[ \t]*include)(\s*<.*?>)/, 1: "preprocessor", 2: "string"}
+        {match: /(?m)^[ \t]*%[ \t]*\S+/, 0: "preprocessor"}
+{match: keywordsToRegex(
+"BITS ORG"
+), 0: "constant"}
+{match: keywordsToRegex(
+"MOV INT"
+"xor div mul"
+), 0: "keyword"}
+]
+}
