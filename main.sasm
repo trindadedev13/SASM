@@ -23,7 +23,14 @@ main:
         MOV    D, 0x02    ; Syscall PUTC
         INT    0x80       ; Perform Syscall
 
-        SUB    B, 0x03    ; B = B - 3
+        SUB    B, 0x03    ; B = B - 0x03
+
+        MOV    A, B       ; A = B
+        MOV    D, 0x01    ; Syscall PUTI
+        INT    0x80       ; Perform Syscall
+
+        MOV    C, 0x03    ; C = 0x0e
+        ADD    B, C       ; B = B - C
 
         MOV    A, B       ; A = B
         MOV    D, 0x01    ; Syscall PUTI
