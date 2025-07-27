@@ -12,6 +12,7 @@ typedef int sasm_intid_t;
 #define INT_SYSCALL 0x80  // int 0x10
 #define INT_SYSCALL_PUTI 0x01
 #define INT_SYSCALL_PUTC 0x02
+#define INT_SYSCALL_EXIT 0x03
 
 typedef struct sasm_node sasm_node;
 

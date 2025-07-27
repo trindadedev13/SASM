@@ -100,6 +100,9 @@ void sasm_interpreter_interpret_node(sasm_node* node) {
             case INT_SYSCALL_PUTI:
               print_int(sasm_regs_getA());
               break;
+            case INT_SYSCALL_EXIT:
+              exit(sasm_regs_getA());
+              break;
           }
           break;
       }

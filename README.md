@@ -21,7 +21,7 @@ MOV     D, 0x01  ; syscall PUTI
 INT     0x80     ; perform syscall
 ```
 
-### 0x01 - PUTC
+### 0x02 - PUTC
 - Put Char, Print a char in stdout
 - A = char
 - Returns in A = Bytes writter
@@ -29,5 +29,15 @@ INT     0x80     ; perform syscall
 ```asm
 MOV     A, 0x0A  ; char A in hexa
 MOV     D, 0x02  ; syscall PUTC
+INT     0x80     ; perform syscall
+```
+
+### 0x03 - EXIT
+- Exit the program with status code.
+- A = status code.
+- Usage:
+```asm
+MOV     A, 0x00  ; 0 in hexa
+MOV     D, 0x03  ; syscall EXIT
 INT     0x80     ; perform syscall
 ```

@@ -11,6 +11,11 @@ main:
         MOV    D, 0x02    ; Syscall PUTC
         INT    0x80       ; Perform Syscall
 
+        ; Exit
+        MOV    A, 0x00    ; A = 0 ; exit(0)
+        MOV    D, 0x03    ; Syscall EXIT
+        INT    0x80       ; Perform syscall
+
         ADD    B, 0xA     ; A = B + 0xA (10)
 
         ; Print The Number (B)
