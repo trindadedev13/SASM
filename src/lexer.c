@@ -112,7 +112,7 @@ void sasm_lexer_tokenize(sasm_lexer* self) {
       }
       if (str_equals(word, "MOV") || str_equals(word, "ADD") ||
           str_equals(word, "SUB") || str_equals(word, "DIV") ||
-          str_equals(word, "INT")) {
+          str_equals(word, "INT") || str_equals(word, "JMP")) {
         sasm_token_add(&self->tokens, word, TOKEN_KEYWORD, self->line,
                        self->col);
       } else {

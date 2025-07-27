@@ -11,10 +11,7 @@ main:
         MOV    D, 0x02    ; Syscall PUTC
         INT    0x80       ; Perform Syscall
 
-        ; Exit
-        MOV    A, 0x00    ; A = 0 ; exit(0)
-        MOV    D, 0x03    ; Syscall EXIT
-        INT    0x80       ; Perform syscall
+        JMP    exit
 
         ADD    B, 0xA     ; A = B + 0xA (10)
 
@@ -43,5 +40,15 @@ main:
 
         ; Print \n
         MOV    A, 0x0A    ; A = 0x0A (\n)
+        MOV    D, 0x02    ; Syscall PUTC
+        INT    0x80       ; Perform Syscall
+
+exit:
+        MOV    A, 0x00    ; A = 0 ; exit(0)
+        MOV    D, 0x03    ; Syscall EXIT
+        INT    0x80       ; Perform syscall
+
+draw_h:
+        MOV    A, 0x48    ; A = 0x48 (H)
         MOV    D, 0x02    ; Syscall PUTC
         INT    0x80       ; Perform Syscall

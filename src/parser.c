@@ -3,7 +3,54 @@
 #include "kcstd/io.h"
 #include "kcstd/memory.h"
 
-// #include "sasm/regs.h"
+sasm_line* sasm_line_new(string label,
+                         sasm_instruction* ins,
+                         size_t line,
+                         size_t col) {
+  sasm_line* it = memory_alloc(sizeof(sasm_line));
+  if (label != null)
+    it->label = str_dup(label);
+  else
+    it->label = null;
+  it->instruction = ins;
+  it->next = null;
+  it->line = line;
+  it->col = col;
+  return it;
+}
+
+void sasm_line_add(sasm_line** head, sasm_line* new_line_t) {
+  if (*head == null) {
+    *head = new_line_t;
+  } else {
+    sasm_line* current = *head;
+    while (current->next)
+      current = current->next;
+    current->next = new_line_t;
+  }
+}
+
+sasm_instruction_type sasm_instruction_type_fromstr(string str) {
+  if (str_equals(str, "MOV")) {
+    return INS_MOV;
+  } else if (str_equals(str, "ADD")) {
+    return INS_ADD;
+  } else if (str_equals(str, "SUB")) {
+    return INS_SUB;
+  } else if (str_equals(str, "INT")) {
+    return INS_INT;
+  } else if (str_equals(str, "JMP")) {
+    return INS_JMP;
+  }
+  return -1;
+}
+
+sasm_interrupt_type sasm_interrupt_type_fromstr(string str) {
+  if (str_equals(str, "0x80")) {
+    return INT_SYSCALL;
+  }
+  return -1;
+}
 
 sasm_parser* sasm_parser_new(sasm_token* tokens) {
   sasm_parser* it = memory_alloc(sizeof(sasm_parser));
@@ -56,7 +103,7 @@ sasm_token* sasm_parser_advance(sasm_parser* self) {
 }
 
 void sasm_parser_parse(sasm_parser* self) {
-  sasm_node* current_label = NULL;
+  string current_label = NULL;
 
   while (true) {
     sasm_token* token = sasm_parser_current(self);
@@ -71,24 +118,11 @@ void sasm_parser_parse(sasm_parser* self) {
 
     switch (token->type) {
       case TOKEN_KEYWORD: {
-        string v1 = null;
-        string v2 = null;
-        string v3 = null;
+        string v1 = NULL;
+        string v2 = NULL;
+        string v3 = NULL;
 
         sasm_token* opcode = sasm_parser_consume(self, TOKEN_KEYWORD);
-
-        if (str_equals(opcode->value, "INT")) {
-          sasm_token* id = sasm_parser_consume(self, TOKEN_IDENTIFIER);
-          sasm_node* node = sasm_interrupt_node_new(
-              sasm_intid_fromstr(id->value), id->line, id->col);
-
-          if (current_label != NULL) {
-            sasm_node_add(&current_label->label_t.body, node);
-          } else {
-            sasm_node_add(&self->nodes, node);
-          }
-          continue;
-        }
 
         v1 = sasm_parser_consume(self, TOKEN_IDENTIFIER)->value;
 
@@ -100,24 +134,20 @@ void sasm_parser_parse(sasm_parser* self) {
 
             string array_values = memory_alloc(1);
             array_values[0] = '\0';
-
             bool first = true;
 
             while (sasm_parser_current(self)->type != TOKEN_RBRACKET) {
-              if (!first) {
-                // só consome a vírgula, NÃO adiciona ao array
+              if (!first)
                 sasm_parser_consume(self, TOKEN_COMMA);
-              }
 
               sasm_token* value_token =
                   sasm_parser_consume(self, TOKEN_IDENTIFIER);
-              if (value_token != null) {
+              if (value_token != NULL) {
                 size_t old_len = str_len(array_values);
                 size_t val_len = str_len(value_token->value);
 
-                array_values = memory_realloc(
-                    array_values,
-                    old_len + val_len + 2);  // +1 para espaço ou '\0'
+                array_values =
+                    memory_realloc(array_values, old_len + val_len + 2);
                 if (!first) {
                   str_cat(array_values, " ");
                 }
@@ -129,7 +159,6 @@ void sasm_parser_parse(sasm_parser* self) {
 
             sasm_parser_consume(self, TOKEN_RBRACKET);
             v2 = array_values;
-
           } else if (sasm_parser_current(self)->type == TOKEN_IDENTIFIER) {
             v2 = sasm_parser_consume(self, TOKEN_IDENTIFIER)->value;
           }
@@ -142,17 +171,17 @@ void sasm_parser_parse(sasm_parser* self) {
           }
         }
 
-        sasm_node* node = sasm_instruction_node_new(
-            sasm_instruction_opcode_fromstr(opcode->value), v1, v2, v3,
-            opcode->line, opcode->col);
+        sasm_instruction* instr = memory_alloc(sizeof(sasm_instruction));
+        instr->type = sasm_instruction_type_fromstr(opcode->value);
+        instr->v1 = str_dup(v1);
+        instr->v2 = v2 ? str_dup(v2) : NULL;
+        instr->v3 = v3 ? str_dup(v3) : NULL;
 
-        if (current_label != NULL) {
-          sasm_node_add(&current_label->label_t.body, node);
-        } else {
-          sasm_node_add(&self->nodes, node);
-        }
+        sasm_line* line_t =
+            sasm_line_new(current_label, instr, opcode->line, opcode->col);
 
-        // printf("{\n\tdest = %s\n\tval = %s\n}\n", v1, v2);
+        sasm_line_add(&self->lines, line_t);
+        current_label = NULL;
         break;
       }
 
@@ -161,11 +190,7 @@ void sasm_parser_parse(sasm_parser* self) {
           sasm_token* id = sasm_parser_consume(self, TOKEN_IDENTIFIER);
           sasm_parser_consume(self, TOKEN_COLON);
 
-          sasm_node* label_node =
-              sasm_label_node_new(id->value, id->line, id->col);
-          current_label = label_node;
-
-          sasm_node_add(&self->nodes, label_node);
+          current_label = str_dup(id->value);
           continue;
         } else {
           printf("Warning[%d:%d]: Unexpected identifier '%s'\n", token->line,

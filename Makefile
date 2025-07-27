@@ -1,5 +1,6 @@
 CC                  = gcc
 RB                  = ruby
+GDB                 = gdb
 
 BUILD_DIR           = build
 LIBC_DIR            = libc
@@ -30,13 +31,10 @@ REGS_O              = $(BUILD_DIR)/regs.o
 INTERPRETER_SRC     = src/interpreter.c
 INTERPRETER_O       = $(BUILD_DIR)/interpreter.o
 
-NODE_SRC            = src/node.c
-NODE_O              = $(BUILD_DIR)/node.o
-
 STACK_SRC           = src/stack.c
 STACK_O             = $(BUILD_DIR)/stack.o
 
-OBJS                = $(LEXER_O) $(PARSER_O) $(TOKEN_O) $(REGS_O) $(INTERPRETER_O) $(NODE_O) $(STACK_O)
+OBJS                = $(LEXER_O) $(PARSER_O) $(TOKEN_O) $(REGS_O) $(INTERPRETER_O) $(STACK_O)
 
 .PHONY: all setup clean run runt debug
 
@@ -60,9 +58,6 @@ $(TOKEN_O): $(TOKEN_SRC)
 $(REGS_O): $(REGS_SRC)
 	$(CC) -c $< -o $@ $(SASM_FLAGS)
 
-$(NODE_O): $(NODE_SRC)
-	$(CC) -c $< -o $@ $(SASM_FLAGS)
-
 $(INTERPRETER_O): $(INTERPRETER_SRC)
 	$(CC) -c $< -o $@ $(SASM_FLAGS)
 
@@ -75,15 +70,24 @@ $(LIBC_LIBSTATIC): $(LIBC_DIR)/$(LIBC_BUILDSCRIPT)
 run:
 	$(SASM_EXECUTABLE_DIR)
 
-runt:
+# just a alias
+runt: termux_run
+
+termux_setup:
 	mkdir -p $(SASM_TEMP)
 	cp $(SASM_EXECUTABLE_DIR) $(SASM_TEMP)/$(SASM_EXECUTABLE)
-	chmod +x $(SASM_TEMP)/$(SASM_EXECUTABLE)
-	$(SASM_TEMP)/$(SASM_EXECUTABLE) main.sasm
+	cp main.sasm $(SASM_TEMP)/main.sasm
+	cd $(SASM_TEMP) && chmod +x $(SASM_EXECUTABLE)
+
+termux_run: termux_setup
+	cd $(SASM_TEMP) && ./$(SASM_EXECUTABLE) main.sasm
 
 clean:
 	rm -rf $(BUILD_DIR)/*
 	rm -rf $(LIBC_DIR)/build/*
+
+gdbt: termux_setup
+	cd $(SASM_TEMP) && $(GDB) $(SASM_EXECUTABLE) --args ./$(SASM_EXECUTABLE) main.sasm
 
 debug: CFLAGS += -g
 debug: clean all

@@ -14,7 +14,7 @@ contains: [
 "BITS ORG"
 ), 0: "constant"}
 {match: keywordsToRegex(
-"MOV INT SUB ADD"
+"MOV INT SUB ADD JMP"
 ), 0: "keyword"}
 ]
 }

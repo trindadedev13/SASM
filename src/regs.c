@@ -162,7 +162,7 @@ void sasm_regs_add(string dest_reg, string value1, string value2) {
 void sasm_regs_sub(string dest_reg, string value1, string value2) {
   bool v2_passed = value2 != null;
 
-   // map strings to enum
+  // map strings to enum
   sasm_reg_type dest_type;
   if (str_equals(dest_reg, "A"))
     dest_type = A;
@@ -198,21 +198,20 @@ void sasm_regs_sub(string dest_reg, string value1, string value2) {
       }
     }
   }
-  
+
   // interpret value2
   {
     string v2 = (v2_passed) ? value2 : value1;
     sasm_regs_reginfo reginfo2 = sasm_regs_get_reginfo(v2);
     if (reginfo2.is_reg) {
-        val2 = get_funcs[reginfo2.type]();
+      val2 = get_funcs[reginfo2.type]();
+    } else {
+      if (str_starts_with(v2, "0x") || str_starts_with(v2, "0X")) {
+        val2 = (byte)str_tol(v2, NULL, 16);
       } else {
-        if (str_starts_with(v2, "0x") || str_starts_with(v2, "0X")) {
-          val2 = (byte)str_tol(v2, NULL, 16);
-        } else {
-          val2 = (byte)str_tol(v2, NULL, 10);
-        }
+        val2 = (byte)str_tol(v2, NULL, 10);
       }
-    
+    }
   }
 
   // calculate result with 8-bit wraparound (overflow)

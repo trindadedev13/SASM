@@ -47,13 +47,7 @@ int main(int argc, string argv[]) {
   sasm_parser* parser = sasm_parser_new(lexer->tokens);
   sasm_parser_parse(parser);
 
-  // sasm_node* current_node = parser->nodes;
-  // while (current_node != null) {
-  // sasm_node_print(current_node);
-  // current_node = current_node->next;
-  // }
-
-  sasm_interpreter* interpreter = sasm_interpreter_new(parser->nodes);
+  sasm_interpreter* interpreter = sasm_interpreter_new(parser->lines);
   sasm_interpreter_run(interpreter);
 
   // printf("{\n\tA = %d\n\tB = %d\n\tC = %d\n\tD = %d\n}\n", sasm_regs_getA(),
