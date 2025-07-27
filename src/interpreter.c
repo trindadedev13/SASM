@@ -6,11 +6,13 @@
 
 #include "sasm/node.h"
 #include "sasm/regs.h"
+#include "sasm/stack.h"
 
 sasm_interpreter* sasm_interpreter_new(sasm_node* nodes) {
   sasm_interpreter* it = memory_alloc(sizeof(sasm_interpreter));
   it->raw_nodes = nodes;
   it->labels = null;
+  it->stack = sasm_stack_new();
   {
     sasm_node* current = nodes;
     while (current != null) {
@@ -97,6 +99,7 @@ void sasm_interpreter_interpret_node(sasm_node* node) {
               break;
             case INT_SYSCALL_PUTI:
               print_int(sasm_regs_getA());
+              break;
           }
           break;
       }

@@ -33,7 +33,10 @@ INTERPRETER_O       = $(BUILD_DIR)/interpreter.o
 NODE_SRC            = src/node.c
 NODE_O              = $(BUILD_DIR)/node.o
 
-OBJS                = $(LEXER_O) $(PARSER_O) $(TOKEN_O) $(REGS_O) $(INTERPRETER_O) $(NODE_O)
+STACK_SRC           = src/stack.c
+STACK_O             = $(BUILD_DIR)/stack.o
+
+OBJS                = $(LEXER_O) $(PARSER_O) $(TOKEN_O) $(REGS_O) $(INTERPRETER_O) $(NODE_O) $(STACK_O)
 
 .PHONY: all setup clean run runt debug
 
@@ -61,6 +64,9 @@ $(NODE_O): $(NODE_SRC)
 	$(CC) -c $< -o $@ $(SASM_FLAGS)
 
 $(INTERPRETER_O): $(INTERPRETER_SRC)
+	$(CC) -c $< -o $@ $(SASM_FLAGS)
+
+$(STACL_O): $(STACK_SRC)
 	$(CC) -c $< -o $@ $(SASM_FLAGS)
 
 $(LIBC_LIBSTATIC): $(LIBC_DIR)/$(LIBC_BUILDSCRIPT)
