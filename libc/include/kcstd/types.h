@@ -46,4 +46,12 @@ typedef int ssize_t;
 #error "invalid arch."
 #endif
 
+#if defined(_WIN64) || defined(__x86_64__) || defined(__aarch64__)
+typedef long long int intptr_t;
+typedef unsigned long long int uintptr_t;
+#else
+typedef int intptr_t;
+typedef unsigned int uintptr_t;
+#endif
+
 #endif

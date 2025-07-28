@@ -41,6 +41,10 @@ sasm_instruction_type sasm_instruction_type_fromstr(string str) {
     return INS_INT;
   } else if (str_equals(str, "JMP")) {
     return INS_JMP;
+  } else if (str_equals(str, "CALL")) {
+    return INS_CALL;
+  } else if (str_equals(str, "RET")) {
+    return INS_RET;
   }
   return -1;
 }
@@ -106,8 +110,7 @@ void sasm_parser_parse(sasm_parser* self) {
   string current_label = NULL;
 
   while (true) {
-    sasm_token* token = sasm_parser_current(self);
-
+    sasm_token* token = sasm_token_get_at(self->tokens, self->pos);
     if (token == NULL) {
       printf("Fatal error: Unexpected end of token stream\n");
       break;
@@ -124,56 +127,58 @@ void sasm_parser_parse(sasm_parser* self) {
 
         sasm_token* opcode = sasm_parser_consume(self, TOKEN_KEYWORD);
 
-        v1 = sasm_parser_consume(self, TOKEN_IDENTIFIER)->value;
-
-        if (sasm_parser_current(self)->type == TOKEN_COMMA) {
-          sasm_parser_consume(self, TOKEN_COMMA);
-
-          if (sasm_parser_current(self)->type == TOKEN_LBRACKET) {
-            sasm_parser_consume(self, TOKEN_LBRACKET);
-
-            string array_values = memory_alloc(1);
-            array_values[0] = '\0';
-            bool first = true;
-
-            while (sasm_parser_current(self)->type != TOKEN_RBRACKET) {
-              if (!first)
-                sasm_parser_consume(self, TOKEN_COMMA);
-
-              sasm_token* value_token =
-                  sasm_parser_consume(self, TOKEN_IDENTIFIER);
-              if (value_token != NULL) {
-                size_t old_len = str_len(array_values);
-                size_t val_len = str_len(value_token->value);
-
-                array_values =
-                    memory_realloc(array_values, old_len + val_len + 2);
-                if (!first) {
-                  str_cat(array_values, " ");
-                }
-                str_cat(array_values, value_token->value);
-              }
-
-              first = false;
-            }
-
-            sasm_parser_consume(self, TOKEN_RBRACKET);
-            v2 = array_values;
-          } else if (sasm_parser_current(self)->type == TOKEN_IDENTIFIER) {
-            v2 = sasm_parser_consume(self, TOKEN_IDENTIFIER)->value;
-          }
+        if (sasm_parser_current(self)->type == TOKEN_IDENTIFIER) {
+          v1 = sasm_parser_consume(self, TOKEN_IDENTIFIER)->value;
 
           if (sasm_parser_current(self)->type == TOKEN_COMMA) {
             sasm_parser_consume(self, TOKEN_COMMA);
-            if (sasm_parser_current(self)->type == TOKEN_IDENTIFIER) {
-              v3 = sasm_parser_consume(self, TOKEN_IDENTIFIER)->value;
+
+            if (sasm_parser_current(self)->type == TOKEN_LBRACKET) {
+              sasm_parser_consume(self, TOKEN_LBRACKET);
+
+              string array_values = memory_alloc(1);
+              array_values[0] = '\0';
+              bool first = true;
+
+              while (sasm_parser_current(self)->type != TOKEN_RBRACKET) {
+                if (!first)
+                  sasm_parser_consume(self, TOKEN_COMMA);
+
+                sasm_token* value_token =
+                    sasm_parser_consume(self, TOKEN_IDENTIFIER);
+                if (value_token != NULL) {
+                  size_t old_len = str_len(array_values);
+                  size_t val_len = str_len(value_token->value);
+
+                  array_values =
+                      memory_realloc(array_values, old_len + val_len + 2);
+                  if (!first) {
+                    str_cat(array_values, " ");
+                  }
+                  str_cat(array_values, value_token->value);
+                }
+
+                first = false;
+              }
+
+              sasm_parser_consume(self, TOKEN_RBRACKET);
+              v2 = array_values;
+            } else if (sasm_parser_current(self)->type == TOKEN_IDENTIFIER) {
+              v2 = sasm_parser_consume(self, TOKEN_IDENTIFIER)->value;
+            }
+
+            if (sasm_parser_current(self)->type == TOKEN_COMMA) {
+              sasm_parser_consume(self, TOKEN_COMMA);
+              if (sasm_parser_current(self)->type == TOKEN_IDENTIFIER) {
+                v3 = sasm_parser_consume(self, TOKEN_IDENTIFIER)->value;
+              }
             }
           }
         }
 
         sasm_instruction* instr = memory_alloc(sizeof(sasm_instruction));
         instr->type = sasm_instruction_type_fromstr(opcode->value);
-        instr->v1 = str_dup(v1);
+        instr->v1 = v1 ? str_dup(v1) : NULL;
         instr->v2 = v2 ? str_dup(v2) : NULL;
         instr->v3 = v3 ? str_dup(v3) : NULL;
 
@@ -186,8 +191,8 @@ void sasm_parser_parse(sasm_parser* self) {
       }
 
       case TOKEN_IDENTIFIER: {
-        if (sasm_parser_next(self)->type == TOKEN_COLON) {
-          sasm_token* id = sasm_parser_consume(self, TOKEN_IDENTIFIER);
+        sasm_token* id = sasm_parser_consume(self, TOKEN_IDENTIFIER);
+        if (sasm_parser_current(self)->type == TOKEN_COLON) {
           sasm_parser_consume(self, TOKEN_COLON);
 
           current_label = str_dup(id->value);
@@ -203,7 +208,7 @@ void sasm_parser_parse(sasm_parser* self) {
       case TOKEN_COMMA:
       case TOKEN_COLON:
       default: {
-        printf("Error[%d:%d]: Unexpected token %s:%s\n", token->line,
+        printf("Error[%d:%d]: Unexpected token %s (%s)\n", token->line,
                token->col, sasm_token_type_tostr(token->type), token->value);
         sasm_parser_advance(self);
         break;
