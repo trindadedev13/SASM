@@ -62,8 +62,7 @@ void sasm_lexer_tokenize(sasm_lexer* self) {
     };
 
     // comments (starting with ;)
-    if (str_starts_with_ofs(self->input, ";", self->pos)) {
-      self->pos += 2;
+    if (self->input[self->pos] == ';') {
       while (self->pos < input_len && self->input[self->pos] != '\n') {
         sasm_lexer_advance(self);
       }
@@ -112,7 +111,8 @@ void sasm_lexer_tokenize(sasm_lexer* self) {
       }
       if (str_equals(word, "MOV") || str_equals(word, "ADD") ||
           str_equals(word, "SUB") || str_equals(word, "DIV") ||
-          str_equals(word, "INT") || str_equals(word, "JMP")) {
+          str_equals(word, "INT") || str_equals(word, "JMP") ||
+          str_equals(word, "CALL") || str_equals(word, "RET")) {
         sasm_token_add(&self->tokens, word, TOKEN_KEYWORD, self->line,
                        self->col);
       } else {

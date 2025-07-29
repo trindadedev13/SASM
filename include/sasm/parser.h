@@ -8,8 +8,11 @@ typedef enum {
   INS_ADD,
   INS_SUB,
   INS_INT,
-  INS_JMP
+  INS_JMP,
+  INS_CALL,
+  INS_RET
 } sasm_instruction_type;
+
 typedef enum { INT_SYSCALL } sasm_interrupt_type;
 typedef enum {
   SYSCALL_PUTI = 0x01,
