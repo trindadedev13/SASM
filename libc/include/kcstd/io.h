@@ -1,5 +1,5 @@
-#ifndef __IO_H__
-#define __IO_H__
+#ifndef __KCSTD_IO_H__
+#define __KCSTD_IO_H__
 
 #include "kcstd/string.h"
 #include "kcstd/syscalls.h"

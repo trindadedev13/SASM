@@ -1,5 +1,5 @@
-#ifndef __CHAR_H__
-#define __CHAR_H__
+#ifndef __KCSTD_CHAR_H__
+#define __KCSTD_CHAR_H__
 
 #include "kcstd/types.h"
 

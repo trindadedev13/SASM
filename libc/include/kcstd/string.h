@@ -1,5 +1,5 @@
-#ifndef __STRING_H__
-#define __STRING_H__
+#ifndef __KCSTD_STRING_H__
+#define __KCSTD_STRING_H__
 
 #include "kcstd/types.h"
 

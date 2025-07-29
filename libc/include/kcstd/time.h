@@ -1,5 +1,5 @@
-#ifndef __TIME_H__
-#define __TIME_H__
+#ifndef __KCSTD_TIME_H__
+#define __KCSTD_TIME_H__
 
 #include "kcstd/types.h"
 

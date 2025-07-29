@@ -1,5 +1,5 @@
-#ifndef __MEMORY_H__
-#define __MEMORY_H__
+#ifndef __KCSTD_MEMORY_H__
+#define __KCSTD_MEMORY_H__
 
 #include "kcstd/types.h"
 

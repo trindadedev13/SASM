@@ -1,5 +1,5 @@
-#ifndef __TYPES_H__
-#define __TYPES_H__
+#ifndef __KCSTD_TYPES_H__
+#define __KCSTD_TYPES_H__
 
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;

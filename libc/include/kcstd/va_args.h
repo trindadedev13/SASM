@@ -1,5 +1,5 @@
-#ifndef __VA_ARGS__
-#define __VA_ARGS__
+#ifndef __KCSTD_VA_ARGS__
+#define __KCSTD_VA_ARGS__
 
 // va list is implemented by compiler
 // so we dont have to implement it
