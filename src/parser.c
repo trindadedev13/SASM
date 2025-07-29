@@ -74,8 +74,7 @@ sasm_token* sasm_parser_consume(sasm_parser* self,
     printf("Error at [%d:%d]: Expected %s, but got %s", token->line, token->col,
            sasm_token_type_tostr(expected_type),
            sasm_token_type_tostr(token->type));
-    exit(1);
-    return NULL;
+    return null;
   }
   self->pos++;
   return token;
@@ -85,7 +84,6 @@ sasm_token* sasm_parser_current(sasm_parser* self) {
   sasm_token* token = sasm_token_get_at(self->tokens, self->pos);
   if (token == null) {
     printf("Failed to get current token at position %d\n", self->pos);
-    exit(1);
     return null;
   }
   return token;
@@ -95,7 +93,6 @@ sasm_token* sasm_parser_next(sasm_parser* self) {
   sasm_token* token = sasm_token_get_at(self->tokens, self->pos + 1);
   if (token == null) {
     printf("Failed to get next token at position %d\n", self->pos + 1);
-    exit(1);
     return null;
   }
   return token;
@@ -107,25 +104,46 @@ sasm_token* sasm_parser_advance(sasm_parser* self) {
 }
 
 void sasm_parser_parse(sasm_parser* self) {
-  string current_label = NULL;
+  string current_label = null;
 
   while (true) {
-    sasm_token* token = sasm_token_get_at(self->tokens, self->pos);
-    if (token == NULL) {
-      printf("Fatal error: Unexpected end of token stream\n");
-      break;
-    }
-
-    if (token->type == TOKEN_EOF)
+    sasm_token* token = sasm_parser_current(self);
+    if (token == null || token->type == TOKEN_EOF)
       break;
 
     switch (token->type) {
       case TOKEN_KEYWORD: {
-        string v1 = NULL;
-        string v2 = NULL;
-        string v3 = NULL;
+        string v1 = null;
+        string v2 = null;
+        string v3 = null;
 
         sasm_token* opcode = sasm_parser_consume(self, TOKEN_KEYWORD);
+        if (opcode == null) {
+          printf("Error[%d:%d]: Failed to get token\n");
+          break;
+        }
+
+        /**
+         * check if its RET call, if so skip params checking.
+         * You might be wondering why not just treat these parameters like in
+         * others. well, we cant because if u call RET, next IDENTIFIER TOKEN can
+         * be like new label and parser will think its a param of RET, so and
+         * error. i dont like this way of fix it, because of duplication of
+         * code, but at least it works.
+         * aquiles trindade
+         */
+        if (str_equals(opcode->value, "RET")) {
+          sasm_instruction* instr = memory_alloc(sizeof(sasm_instruction));
+          instr->type = INS_RET;
+          instr->v1 = null;
+          instr->v2 = null;
+          instr->v3 = null;
+
+          sasm_line* line_t =
+              sasm_line_new(current_label, instr, opcode->line, opcode->col);
+          sasm_line_add(&self->lines, line_t);
+          continue;
+        }
 
         if (sasm_parser_current(self)->type == TOKEN_IDENTIFIER) {
           v1 = sasm_parser_consume(self, TOKEN_IDENTIFIER)->value;
@@ -146,7 +164,7 @@ void sasm_parser_parse(sasm_parser* self) {
 
                 sasm_token* value_token =
                     sasm_parser_consume(self, TOKEN_IDENTIFIER);
-                if (value_token != NULL) {
+                if (value_token != null) {
                   size_t old_len = str_len(array_values);
                   size_t val_len = str_len(value_token->value);
 
@@ -178,15 +196,15 @@ void sasm_parser_parse(sasm_parser* self) {
 
         sasm_instruction* instr = memory_alloc(sizeof(sasm_instruction));
         instr->type = sasm_instruction_type_fromstr(opcode->value);
-        instr->v1 = v1 ? str_dup(v1) : NULL;
-        instr->v2 = v2 ? str_dup(v2) : NULL;
-        instr->v3 = v3 ? str_dup(v3) : NULL;
+        instr->v1 = v1 ? str_dup(v1) : null;
+        instr->v2 = v2 ? str_dup(v2) : null;
+        instr->v3 = v3 ? str_dup(v3) : null;
 
         sasm_line* line_t =
             sasm_line_new(current_label, instr, opcode->line, opcode->col);
 
         sasm_line_add(&self->lines, line_t);
-        current_label = NULL;
+        current_label = null;
         break;
       }
 
@@ -194,25 +212,26 @@ void sasm_parser_parse(sasm_parser* self) {
         sasm_token* id = sasm_parser_consume(self, TOKEN_IDENTIFIER);
         if (sasm_parser_current(self)->type == TOKEN_COLON) {
           sasm_parser_consume(self, TOKEN_COLON);
-
-          current_label = str_dup(id->value);
+          if (sasm_parser_current(self)->type == TOKEN_KEYWORD) {
+            if (current_label != null)
+              memory_free(current_label);
+            current_label = str_dup(id->value);
+          } else {
+            sasm_line* line_t =
+                sasm_line_new(str_dup(id->value), null, id->line, id->col);
+            sasm_line_add(&self->lines, line_t);
+          }
           continue;
-        } else {
-          printf("Warning[%d:%d]: Unexpected identifier '%s'\n", token->line,
-                 token->col, token->value);
-          sasm_parser_advance(self);
         }
         break;
       }
 
       case TOKEN_COMMA:
       case TOKEN_COLON:
-      default: {
-        printf("Error[%d:%d]: Unexpected token %s (%s)\n", token->line,
+      default:
+        printf("Warning[%d:%d]: Unexpected token %s (%s)\n", token->line,
                token->col, sasm_token_type_tostr(token->type), token->value);
         sasm_parser_advance(self);
-        break;
-      }
     }
   }
 }

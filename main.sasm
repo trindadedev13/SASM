@@ -32,7 +32,8 @@ main:
         MOV    D, 0x01    ; Syscall PUTI
         INT    0x80       ; Perform Syscall
 
-        CALL DrawNewLine
+        CALL   DrawNewLine
+        CALL   Exit
 
 DrawA:
         MOV    A, 0x41
