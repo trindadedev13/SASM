@@ -45,6 +45,12 @@ sasm_line* sasm_interpreter_interpret_line(sasm_interpreter* self,
 
   switch (line->instruction->type) {
     case INS_MOV: {
+      /**
+       * mov instruction
+       * MOV A, B
+       *
+       * it asigns arg2(v2) value to arg1(v1)
+       */
       string v1 = line->instruction->v1;
       string v2 = line->instruction->v2;
       if (v1 == null || v2 == null) {
@@ -57,13 +63,17 @@ sasm_line* sasm_interpreter_interpret_line(sasm_interpreter* self,
     }
 
     case INS_ADD: {
+      /**
+       * add instruction
+       * ADD A, B     = a = a + b
+       * ADD A, B, C  = a = b + c
+       *
+       * It sums an number by an number
+       * see the signature above
+       */
       string v1 = line->instruction->v1;
       string v2 = line->instruction->v2;
       if (v1 == null || v2 == null) {
-        /**
-         * ADD A, B     = a = a + b
-         * ADD A, B, C  = a = b + c
-         */
         printf("Error[%d:%d]: ADD Instruction Syntax: ADD [DEST], [V2], [V3]\n",
                line->line, line->col);
         return null;
@@ -74,14 +84,18 @@ sasm_line* sasm_interpreter_interpret_line(sasm_interpreter* self,
     }
 
     case INS_SUB: {
+      /**
+       * sub instruction
+       * SUB A, B     = a = a - b
+       * SUB A, B, C  = a = b - c
+       *
+       * It subtracts an number by an number
+       * see the signature above
+       */
       string v1 = line->instruction->v1;
       string v2 = line->instruction->v2;
       if (v1 == null || v2 == null) {
-        /**
-         * SUB A, B     = a = a + b
-         * SUB A, B, C  = a = b + c
-         */
-        printf("Error[%d:%d]: SUB Instruction Syntax: ADD [DEST], [V2], [V3]\n",
+        printf("Error[%d:%d]: SUB Instruction Syntax: SUB [DEST], [V2], [V3]\n",
                line->line, line->col);
         return null;
       }
@@ -91,6 +105,12 @@ sasm_line* sasm_interpreter_interpret_line(sasm_interpreter* self,
     }
 
     case INS_INT: {
+      /**
+       * interruption
+       * INT [id]
+       *
+       * well, its for make Simulated CPU do tasks
+       */
       string v1 = line->instruction->v1;
       if (v1 == null) {
         printf("Error[%d:%d]: INT Instruction Syntax: INT [ID]\n", line->line,
@@ -104,15 +124,26 @@ sasm_line* sasm_interpreter_interpret_line(sasm_interpreter* self,
         return null;
       }
       switch (type) {
+        /** do the interrupt */
         case INT_SYSCALL: {
+          /** interpret the syscall interrupt */
           switch (sasm_regs_getD()) {
             case SYSCALL_PUTI:
+              /**
+               * lmao idk why print_int dont return bytes like put_char
+               * TODO: do what i said above
+               */
               print_int(sasm_regs_getA());
               break;
             case SYSCALL_PUTC:
+              /**
+               * print char in stdout
+               * return the bytes written in A register
+               */
               sasm_regs_setA(put_char(sasm_regs_getA()));
               break;
             case SYSCALL_EXIT:
+              /** just exit */
               exit(sasm_regs_getA());
               break;
           }
@@ -123,6 +154,13 @@ sasm_line* sasm_interpreter_interpret_line(sasm_interpreter* self,
     }
 
     case INS_JMP: {
+      /**
+       * jump to label
+       * JMP [label]
+       *
+       * it gets the label start line
+       * and continue the flow from it
+       */
       string v1 = line->instruction->v1;
       if (v1 == null) {
         printf("Error[%d:%d]: JMP Instruction Syntax: JMP [label]\n",
@@ -138,6 +176,14 @@ sasm_line* sasm_interpreter_interpret_line(sasm_interpreter* self,
     }
 
     case INS_CALL: {
+      /**
+       * call label (and return)
+       * CALL [label]
+       *
+       * it does the same as JMP instruction
+       * but it stores the return value in stack
+       * to RET instruction, return to caller.
+       */
       string v1 = line->instruction->v1;
       if (v1 == null) {
         printf("Error[%d:%d]: CALL Instruction Syntax: CALL [label]\n",
@@ -164,6 +210,11 @@ sasm_line* sasm_interpreter_interpret_line(sasm_interpreter* self,
 
     case INS_RET: {
       /**
+       * return to label
+       * RET
+       *
+       * it return to label caller
+       * should be used with CALL
        * pops the return line pointer bytes of stack
        * FIXME!!: if its not called (executed by the default program flow) it
        * gives errors. aquiles trindade

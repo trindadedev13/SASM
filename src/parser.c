@@ -126,9 +126,9 @@ void sasm_parser_parse(sasm_parser* self) {
         /**
          * check if its RET call, if so skip params checking.
          * You might be wondering why not just treat these parameters like in
-         * others. well, we cant because if u call RET, next IDENTIFIER TOKEN can
-         * be like new label and parser will think its a param of RET, so and
-         * error. i dont like this way of fix it, because of duplication of
+         * others. well, we cant because if u call RET, next IDENTIFIER TOKEN
+         * can be like new label and parser will think its a param of RET, so
+         * and error. i dont like this way of fix it, because of duplication of
          * code, but at least it works.
          * aquiles trindade
          */
@@ -145,12 +145,27 @@ void sasm_parser_parse(sasm_parser* self) {
           continue;
         }
 
+        /**
+         * Validate arguments
+         * btw its not very secure
+         * it checks if next is IDENTIFIER
+         * if its so its arg1(v1)
+         * so now it checks next is COMMA, if so consume
+         * and check if its identifier, if its so arg2(v2)
+         * same for others.
+         *
+         * if u had checked the code, u can see i just valid Array for arg2(v2),
+         * and not for arg1(v1) its because arg1(v1) usually is dest reg, so its
+         * "never" will be a value(like array) and yes, we need to valid it to
+         * arg3 (v3)
+         */
         if (sasm_parser_current(self)->type == TOKEN_IDENTIFIER) {
           v1 = sasm_parser_consume(self, TOKEN_IDENTIFIER)->value;
 
           if (sasm_parser_current(self)->type == TOKEN_COMMA) {
             sasm_parser_consume(self, TOKEN_COMMA);
 
+            /** Validate array */
             if (sasm_parser_current(self)->type == TOKEN_LBRACKET) {
               sasm_parser_consume(self, TOKEN_LBRACKET);
 
@@ -181,10 +196,15 @@ void sasm_parser_parse(sasm_parser* self) {
 
               sasm_parser_consume(self, TOKEN_RBRACKET);
               v2 = array_values;
+              /** else its just a normal value, so IDENTIFIER */
             } else if (sasm_parser_current(self)->type == TOKEN_IDENTIFIER) {
               v2 = sasm_parser_consume(self, TOKEN_IDENTIFIER)->value;
             }
 
+            /**
+             * validated arg3(v3)
+             * TODO: add support for array here soon
+             */
             if (sasm_parser_current(self)->type == TOKEN_COMMA) {
               sasm_parser_consume(self, TOKEN_COMMA);
               if (sasm_parser_current(self)->type == TOKEN_IDENTIFIER) {
@@ -194,21 +214,41 @@ void sasm_parser_parse(sasm_parser* self) {
           }
         }
 
+        /** create instruction based on entry */
         sasm_instruction* instr = memory_alloc(sizeof(sasm_instruction));
         instr->type = sasm_instruction_type_fromstr(opcode->value);
+        /** V1 never would be null, but its good to check */
         instr->v1 = v1 ? str_dup(v1) : null;
         instr->v2 = v2 ? str_dup(v2) : null;
         instr->v3 = v3 ? str_dup(v3) : null;
 
+        /** finally create line */
         sasm_line* line_t =
             sasm_line_new(current_label, instr, opcode->line, opcode->col);
 
         sasm_line_add(&self->lines, line_t);
+        /** clear current label
+         * why? because label is linked just to first instruction after label
+         * def like: label: MOV  A, 0x00 ADD, A, 0x01
+         *
+         * the MOV instruction is linked to label but ADD not
+         * because we dont need it in interpreter.
+         */
         current_label = null;
         break;
       }
 
       case TOKEN_IDENTIFIER: {
+        /**
+         * it parses the label like:
+         * IDENTFIER COLON (label:)
+         * simple, it just get current IDENTIFIER (name of label)
+         * and check if next is COLON
+         * if so, its label, so consume COLON
+         * also if next token is a INSTRUCTION/KEYWORD
+         * it will set current label
+         * else it just create empty line
+         */
         sasm_token* id = sasm_parser_consume(self, TOKEN_IDENTIFIER);
         if (sasm_parser_current(self)->type == TOKEN_COLON) {
           sasm_parser_consume(self, TOKEN_COLON);
@@ -229,6 +269,7 @@ void sasm_parser_parse(sasm_parser* self) {
       case TOKEN_COMMA:
       case TOKEN_COLON:
       default:
+        /** just show a warning about unexpected tokens, no error */
         printf("Warning[%d:%d]: Unexpected token %s (%s)\n", token->line,
                token->col, sasm_token_type_tostr(token->type), token->value);
         sasm_parser_advance(self);
