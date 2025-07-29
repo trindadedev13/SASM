@@ -36,3 +36,7 @@ int sasm_stack_peek() {
 
   return cpu->memory->data[cpu->regs->SP];
 }
+
+int sasm_stack_size() {
+  return STACK_BASE - cpu->regs->SP;
+}

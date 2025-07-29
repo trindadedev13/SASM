@@ -216,15 +216,26 @@ sasm_line* sasm_interpreter_interpret_line(sasm_interpreter* self,
        * it return to label caller
        * should be used with CALL
        * pops the return line pointer bytes of stack
-       * FIXME!!: if its not called (executed by the default program flow) it
-       * gives errors. aquiles trindade
+       * aquiles trindade
        */
+
+      /** If theres no pointer in the stack, so warning user. */
+      if (sasm_stack_size() < sizeof(uintptr_t)) {
+        printf("Warning[%d:%d]: RET without CALL.\n", line->line, line->col);
+        return line->next;
+      }
       uintptr_t ret_addr = 0;
       for (int i = sizeof(uintptr_t) - 1; i >= 0; i--) {
         ret_addr <<= 8;
         ret_addr |= sasm_stack_pop();
       }
-      sasm_line* return_point = (sasm_line*)ret_addr;
+      sasm_line* return_point_uns = (sasm_line*)ret_addr;
+
+      /**
+       * If popped pointer is null, so just continue the flow
+       */
+      sasm_line* return_point =
+          (return_point_uns != null) ? return_point_uns : line->next;
       return return_point;
     }
 

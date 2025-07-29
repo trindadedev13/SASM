@@ -33,7 +33,7 @@ main:
         INT    0x80       ; Perform Syscall
 
         CALL   DrawNewLine
-        CALL   Exit
+       ; CALL   Exit
 
 DrawA:
         MOV    A, 0x41

@@ -38,17 +38,8 @@ int sasm_stack_pop();
 int sasm_stack_peek();
 
 /**
- * Returns if stack if full
- *
- * @param The stack structure
+ * Returns the size of stack
  */
-bool sasm_stack_is_full();
-
-/**
- * Returns if stack if empty
- *
- * @param The stack structure
- */
-bool sasm_stack_is_empty();
+int sasm_stack_size();
 
 #endif
