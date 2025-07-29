@@ -3,29 +3,22 @@
 
 #include "kcstd/types.h"
 
-#define STACK_MAX 8192
-
-typedef struct {
-  byte arr[STACK_MAX];
-  int top;
-} sasm_stack;
+#define STACK_BASE 0x30C4   // stack start
+#define STACK_LIMIT 0x0000  // stack end
 
 /**
- * Returns new SASM_Stack structure
- *
- * FIXME!!: Add Delete Stack function to clear memory
+ * Initializes Stack.
  */
-sasm_stack* sasm_stack_new();
+bool sasm_stack_init();
 
 /**
  * Pushes a new value in stack
  *
- * @param The stack structure
  * @param The value(byte) to be pushed
  *
  * Returns true if success, false if error
  */
-bool sasm_stack_push(sasm_stack*, byte);
+bool sasm_stack_push(byte);
 
 /**
  * Pops the last pushed value in stack
@@ -34,7 +27,7 @@ bool sasm_stack_push(sasm_stack*, byte);
  *
  * Returns the popped value, or -1 if error
  */
-int sasm_stack_pop(sasm_stack*);
+int sasm_stack_pop();
 
 /**
  * Returns the last pushed value in stack
@@ -42,20 +35,20 @@ int sasm_stack_pop(sasm_stack*);
  *
  * @param The stack structure
  */
-int sasm_stack_peek(sasm_stack*);
+int sasm_stack_peek();
 
 /**
  * Returns if stack if full
  *
  * @param The stack structure
  */
-bool sasm_stack_is_full(sasm_stack*);
+bool sasm_stack_is_full();
 
 /**
  * Returns if stack if empty
  *
  * @param The stack structure
  */
-bool sasm_stack_is_empty(sasm_stack*);
+bool sasm_stack_is_empty();
 
 #endif

@@ -34,7 +34,13 @@ INTERPRETER_O       = $(BUILD_DIR)/interpreter.o
 STACK_SRC           = src/stack.c
 STACK_O             = $(BUILD_DIR)/stack.o
 
-OBJS                = $(LEXER_O) $(PARSER_O) $(TOKEN_O) $(REGS_O) $(INTERPRETER_O) $(STACK_O)
+CPU_SRC             = src/cpu.c
+CPU_O               = $(BUILD_DIR)/cpu.o
+
+MEMORY_SRC          = src/memory.c
+MEMORY_O            = $(BUILD_DIR)/memory.o
+
+OBJS                = $(LEXER_O) $(PARSER_O) $(TOKEN_O) $(REGS_O) $(INTERPRETER_O) $(STACK_O) $(CPU_O) $(MEMORY_O)
 
 .PHONY: all setup clean run runt debug
 
@@ -62,6 +68,12 @@ $(INTERPRETER_O): $(INTERPRETER_SRC)
 	$(CC) -c $< -o $@ $(SASM_FLAGS)
 
 $(STACK_O): $(STACK_SRC)
+	$(CC) -c $< -o $@ $(SASM_FLAGS)
+
+$(CPU_O): $(CPU_SRC)
+	$(CC) -c $< -o $@ $(SASM_FLAGS)
+
+$(MEMORY_O): $(MEMORY_SRC)
 	$(CC) -c $< -o $@ $(SASM_FLAGS)
 
 $(LIBC_LIBSTATIC): $(LIBC_DIR)/$(LIBC_BUILDSCRIPT)

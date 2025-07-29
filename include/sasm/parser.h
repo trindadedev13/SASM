@@ -39,17 +39,17 @@ struct sasm_line {
 };
 
 /**
-  * Returns the instruction type enum value based on string
-  *
-  * @param The string
-  */
+ * Returns the instruction type enum value based on string
+ *
+ * @param The string
+ */
 sasm_instruction_type sasm_instruction_type_fromstr(string);
 
 /**
-  * Returns the interrupt type enum value based on string
-  *
-  * @param The string
-  */
+ * Returns the interrupt type enum value based on string
+ *
+ * @param The string
+ */
 sasm_interrupt_type sasm_interrupt_type_fromstr(string);
 
 /**

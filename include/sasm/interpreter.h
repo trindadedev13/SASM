@@ -6,7 +6,6 @@
 
 typedef struct {
   sasm_line* raw_lines;
-  sasm_stack* stack;
 } sasm_interpreter;
 
 /**

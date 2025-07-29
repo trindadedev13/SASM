@@ -4,37 +4,26 @@
 #include "kcstd/types.h"
 
 typedef struct {
+  /** 8-Bits Registers */
   byte A;
   byte B;
   byte C;
   byte D;
+
+  /** 16-Bits Registers */
+  uint16_t SP;
 } sasm_regs;
 
-extern sasm_regs regs;
+sasm_regs* sasm_regs_new();
 
 /**
- * Setters of registers
- * A, B, C, D
+ * Clear registers memory.
  *
- * @param byte The register new value
+ * @param The registers structure
  */
-void sasm_regs_setA(byte);
-void sasm_regs_setB(byte);
-void sasm_regs_setC(byte);
-void sasm_regs_setD(byte);
+void sasm_regs_delete(sasm_regs*);
 
-/**
- * Getters of registers
- * A, B, C, D
- *
- * Returns the register value(value)
- */
-byte sasm_regs_getA();
-byte sasm_regs_getB();
-byte sasm_regs_getC();
-byte sasm_regs_getD();
-
-typedef enum { A, B, C, D } sasm_reg_type;
+typedef enum { REG_A, REG_B, REG_C, REG_D, REG_SP } sasm_reg_type;
 
 typedef struct {
   bool is_reg;

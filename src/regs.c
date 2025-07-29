@@ -1,52 +1,42 @@
 #include "sasm/regs.h"
 
 #include "kcstd/io.h"
+#include "kcstd/memory.h"
 #include "kcstd/string.h"
 #include "kcstd/types.h"
 
-sasm_regs regs = {0x00, 0x00, 0x00, 0x00};
+#include "sasm/cpu.h"
 
-void sasm_regs_setA(byte bytes) {
-  regs.A = bytes;
+sasm_regs* sasm_regs_new() {
+  sasm_regs* it = memory_alloc(sizeof(sasm_regs));
+  it->A = 0x00;
+  it->B = 0x00;
+  it->C = 0x00;
+  it->D = 0x00;
+  it->SP = 0x00;
+  return it;
 }
 
-void sasm_regs_setB(byte bytes) {
-  regs.B = bytes;
-}
-
-void sasm_regs_setC(byte bytes) {
-  regs.C = bytes;
-}
-
-void sasm_regs_setD(byte bytes) {
-  regs.D = bytes;
-}
-
-byte sasm_regs_getA() {
-  return regs.A;
-}
-
-byte sasm_regs_getB() {
-  return regs.B;
-}
-
-byte sasm_regs_getC() {
-  return regs.C;
-}
-
-byte sasm_regs_getD() {
-  return regs.D;
+void sasm_regs_delete(sasm_regs* self) {
+  self->A = 0x00;
+  self->B = 0x00;
+  self->C = 0x00;
+  self->D = 0x00;
+  self->SP = 0x00;
+  memory_free(self);
 }
 
 sasm_regs_reginfo sasm_regs_get_reginfo(string value) {
   if (str_equals(value, "A")) {
-    return (sasm_regs_reginfo){true, A};
+    return (sasm_regs_reginfo){true, REG_A};
   } else if (str_equals(value, "B")) {
-    return (sasm_regs_reginfo){true, B};
+    return (sasm_regs_reginfo){true, REG_B};
   } else if (str_equals(value, "C")) {
-    return (sasm_regs_reginfo){true, C};
+    return (sasm_regs_reginfo){true, REG_C};
   } else if (str_equals(value, "D")) {
-    return (sasm_regs_reginfo){true, D};
+    return (sasm_regs_reginfo){true, REG_D};
+  } else if (str_equals(value, "SP")) {
+    return (sasm_regs_reginfo){true, REG_SP};
   }
   return (sasm_regs_reginfo){false, -1};
 }
@@ -56,163 +46,123 @@ void sasm_regs_mov(string dest_reg, string value) {
   // map strings to enum
   sasm_reg_type dest_type;
   if (str_equals(dest_reg, "A"))
-    dest_type = A;
+    dest_type = REG_A;
   else if (str_equals(dest_reg, "B"))
-    dest_type = B;
+    dest_type = REG_B;
   else if (str_equals(dest_reg, "C"))
-    dest_type = C;
+    dest_type = REG_C;
   else if (str_equals(dest_reg, "D"))
-    dest_type = D;
+    dest_type = REG_D;
+  else if (str_equals(dest_reg, "SP"))
+    dest_type = REG_SP;
   else
-    return;  // invalid dest register
-
-  // getter & setters
-  byte (*get_funcs[])() = {sasm_regs_getA, sasm_regs_getB, sasm_regs_getC,
-                           sasm_regs_getD};
-  void (*set_funcs[])(byte) = {sasm_regs_setA, sasm_regs_setB, sasm_regs_setC,
-                               sasm_regs_setD};
+    return;
 
   byte value_data;
 
   // try interpret value as register
   sasm_regs_reginfo reginfo = sasm_regs_get_reginfo(value);
   if (reginfo.is_reg) {
-    value_data = get_funcs[reginfo.type]();
+    value_data = *((&cpu->regs->A) + reginfo.type);  // acesso direto
   } else {
-    // try interpret as literal (decimal or hexadecimal)
     if (str_starts_with(value, "0x") || str_starts_with(value, "0X")) {
-      value_data = (byte)str_tol(value, NULL, 16);  // hexadecimal
+      value_data = (byte)str_tol(value, NULL, 16);
     } else {
-      value_data = (byte)str_tol(value, NULL, 10);  // decimal
+      value_data = (byte)str_tol(value, NULL, 10);
     }
   }
 
-  // assign value to dest reg
-  set_funcs[dest_type](value_data);
+  *((&cpu->regs->A) + dest_type) = value_data;
 }
 
-// ADD dest_reg, value1, [value2]
 void sasm_regs_add(string dest_reg, string value1, string value2) {
-  bool v2_passed = value2 != null;
+  bool v2_passed = value2 != NULL;
 
-  // map strings to enum
   sasm_reg_type dest_type;
   if (str_equals(dest_reg, "A"))
-    dest_type = A;
+    dest_type = REG_A;
   else if (str_equals(dest_reg, "B"))
-    dest_type = B;
+    dest_type = REG_B;
   else if (str_equals(dest_reg, "C"))
-    dest_type = C;
+    dest_type = REG_C;
   else if (str_equals(dest_reg, "D"))
-    dest_type = D;
+    dest_type = REG_D;
+  else if (str_equals(dest_reg, "SP"))
+    dest_type = REG_SP;
   else
-    return;  // invalid dest register
+    return;
 
-  // getter & setters
-  byte (*get_funcs[])() = {sasm_regs_getA, sasm_regs_getB, sasm_regs_getC,
-                           sasm_regs_getD};
-  void (*set_funcs[])(byte) = {sasm_regs_setA, sasm_regs_setB, sasm_regs_setC,
-                               sasm_regs_setD};
+  byte val1 = 0, val2 = 0;
 
-  byte val1 = 0;
-  byte val2 = 0;
-
-  // interpret value1
   {
     string v1 = (v2_passed) ? value1 : dest_reg;
     sasm_regs_reginfo reginfo1 = sasm_regs_get_reginfo(v1);
     if (reginfo1.is_reg) {
-      val1 = get_funcs[reginfo1.type]();
+      val1 = *((&cpu->regs->A) + reginfo1.type);
+    } else if (str_starts_with(v1, "0x") || str_starts_with(v1, "0X")) {
+      val1 = (byte)str_tol(v1, NULL, 16);
     } else {
-      if (str_starts_with(v1, "0x") || str_starts_with(v1, "0X")) {
-        val1 = (byte)str_tol(v1, NULL, 16);
-      } else {
-        val1 = (byte)str_tol(v1, NULL, 10);
-      }
+      val1 = (byte)str_tol(v1, NULL, 10);
     }
   }
 
-  // interpret value2
   {
     string v2 = (v2_passed) ? value2 : value1;
     sasm_regs_reginfo reginfo2 = sasm_regs_get_reginfo(v2);
     if (reginfo2.is_reg) {
-      val2 = get_funcs[reginfo2.type]();
+      val2 = *((&cpu->regs->A) + reginfo2.type);
+    } else if (str_starts_with(v2, "0x") || str_starts_with(v2, "0X")) {
+      val2 = (byte)str_tol(v2, NULL, 16);
     } else {
-      if (str_starts_with(v2, "0x") || str_starts_with(v2, "0X")) {
-        val2 = (byte)str_tol(v2, NULL, 16);
-      } else {
-        val2 = (byte)str_tol(v2, NULL, 10);
-      }
+      val2 = (byte)str_tol(v2, NULL, 10);
     }
   }
 
-  // calc result (with overflow wraparound)
-  byte result = val1 + val2;
-
-  // asign to destination register
-  set_funcs[dest_type](result);
+  *((&cpu->regs->A) + dest_type) = val1 + val2;
 }
 
-// SUB dest_reg, value1, [value2]
 void sasm_regs_sub(string dest_reg, string value1, string value2) {
-  bool v2_passed = value2 != null;
+  bool v2_passed = value2 != NULL;
 
-  // map strings to enum
   sasm_reg_type dest_type;
   if (str_equals(dest_reg, "A"))
-    dest_type = A;
+    dest_type = REG_A;
   else if (str_equals(dest_reg, "B"))
-    dest_type = B;
+    dest_type = REG_B;
   else if (str_equals(dest_reg, "C"))
-    dest_type = C;
+    dest_type = REG_C;
   else if (str_equals(dest_reg, "D"))
-    dest_type = D;
+    dest_type = REG_D;
+  else if (str_equals(dest_reg, "SP"))
+    dest_type = REG_SP;
   else
-    return;  // invalid dest register
+    return;
 
-  // getter & setters
-  byte (*get_funcs[])() = {sasm_regs_getA, sasm_regs_getB, sasm_regs_getC,
-                           sasm_regs_getD};
-  void (*set_funcs[])(byte) = {sasm_regs_setA, sasm_regs_setB, sasm_regs_setC,
-                               sasm_regs_setD};
+  byte val1 = 0, val2 = 0;
 
-  byte val1 = 0;
-  byte val2 = 0;
-
-  // interpret value1
   {
     string v1 = (v2_passed) ? value1 : dest_reg;
     sasm_regs_reginfo reginfo1 = sasm_regs_get_reginfo(v1);
     if (reginfo1.is_reg) {
-      val1 = get_funcs[reginfo1.type]();
+      val1 = *((&cpu->regs->A) + reginfo1.type);
+    } else if (str_starts_with(v1, "0x") || str_starts_with(v1, "0X")) {
+      val1 = (byte)str_tol(v1, NULL, 16);
     } else {
-      if (str_starts_with(v1, "0x") || str_starts_with(v1, "0X")) {
-        val1 = (byte)str_tol(v1, NULL, 16);
-      } else {
-        val1 = (byte)str_tol(v1, NULL, 10);
-      }
+      val1 = (byte)str_tol(v1, NULL, 10);
     }
   }
 
-  // interpret value2
   {
     string v2 = (v2_passed) ? value2 : value1;
     sasm_regs_reginfo reginfo2 = sasm_regs_get_reginfo(v2);
     if (reginfo2.is_reg) {
-      val2 = get_funcs[reginfo2.type]();
+      val2 = *((&cpu->regs->A) + reginfo2.type);
+    } else if (str_starts_with(v2, "0x") || str_starts_with(v2, "0X")) {
+      val2 = (byte)str_tol(v2, NULL, 16);
     } else {
-      if (str_starts_with(v2, "0x") || str_starts_with(v2, "0X")) {
-        val2 = (byte)str_tol(v2, NULL, 16);
-      } else {
-        val2 = (byte)str_tol(v2, NULL, 10);
-      }
+      val2 = (byte)str_tol(v2, NULL, 10);
     }
   }
 
-  // calculate result with 8-bit wraparound (overflow)
-  byte result = val1 - val2;
-
-  // assign to destination register
-  set_funcs[dest_type](result);
+  *((&cpu->regs->A) + dest_type) = val1 - val2;
 }

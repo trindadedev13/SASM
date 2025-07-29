@@ -4,6 +4,7 @@
 #include "kcstd/memory.h"
 #include "kcstd/types.h"
 
+#include "sasm/cpu.h"
 #include "sasm/parser.h"
 #include "sasm/regs.h"
 #include "sasm/stack.h"
@@ -11,7 +12,6 @@
 sasm_interpreter* sasm_interpreter_new(sasm_line* lines) {
   sasm_interpreter* it = memory_alloc(sizeof(sasm_interpreter));
   it->raw_lines = lines;
-  it->stack = sasm_stack_new();
   return it;
 }
 
@@ -127,24 +127,24 @@ sasm_line* sasm_interpreter_interpret_line(sasm_interpreter* self,
         /** do the interrupt */
         case INT_SYSCALL: {
           /** interpret the syscall interrupt */
-          switch (sasm_regs_getD()) {
+          switch (cpu->regs->D) {
             case SYSCALL_PUTI:
               /**
                * lmao idk why print_int dont return bytes like put_char
                * TODO: do what i said above
                */
-              print_int(sasm_regs_getA());
+              print_int(cpu->regs->A);
               break;
             case SYSCALL_PUTC:
               /**
                * print char in stdout
                * return the bytes written in A register
                */
-              sasm_regs_setA(put_char(sasm_regs_getA()));
+              cpu->regs->A = put_char(cpu->regs->A);
               break;
             case SYSCALL_EXIT:
               /** just exit */
-              exit(sasm_regs_getA());
+              exit(cpu->regs->A);
               break;
           }
           break;
@@ -203,7 +203,7 @@ sasm_line* sasm_interpreter_interpret_line(sasm_interpreter* self,
        */
       uintptr_t ptr = (uintptr_t)(line->next);
       for (int i = 0; i < sizeof(uintptr_t); i++) {
-        sasm_stack_push(self->stack, (ptr >> (i * 8)) & 0xFF);
+        sasm_stack_push((ptr >> (i * 8)) & 0xFF);
       }
       return lab_line;
     }
@@ -222,7 +222,7 @@ sasm_line* sasm_interpreter_interpret_line(sasm_interpreter* self,
       uintptr_t ret_addr = 0;
       for (int i = sizeof(uintptr_t) - 1; i >= 0; i--) {
         ret_addr <<= 8;
-        ret_addr |= sasm_stack_pop(self->stack);
+        ret_addr |= sasm_stack_pop();
       }
       sasm_line* return_point = (sasm_line*)ret_addr;
       return return_point;

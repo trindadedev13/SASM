@@ -2,6 +2,7 @@
 #include "kcstd/memory.h"
 #include "kcstd/string.h"
 
+#include "sasm/cpu.h"
 #include "sasm/interpreter.h"
 #include "sasm/lexer.h"
 #include "sasm/parser.h"
@@ -32,6 +33,8 @@ int main(int argc, string argv[]) {
   if (content == null)
     return sasm_err(1, "Failed to allocate content buffer.");
   file_read(file, content, size);
+
+  sasm_cpu_init();
 
   sasm_lexer* lexer = sasm_lexer_new(content);
   sasm_lexer_tokenize(lexer);
