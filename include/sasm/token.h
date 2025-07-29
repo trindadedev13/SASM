@@ -23,10 +23,30 @@ struct sasm_token {
   sasm_token* next;
 };
 
+/**
+ * Adds a new token in linked token array
+ *
+ * @param The linked token array
+ * @param The token value
+ * @param The token type
+ * @param The token line
+ * @param The token col
+ */
 void sasm_token_add(sasm_token**, string, sasm_token_type, size_t, size_t);
 
+/**
+ * Returns the string value based on type
+ *
+ * @param The type
+ */
 string sasm_token_type_tostr(sasm_token_type);
 
+/**
+ * Gets the token at position from token linked array
+ *
+ * @param The linked array
+ * @param The position
+ */
 sasm_token* sasm_token_get_at(sasm_token*, size_t);
 
 #endif

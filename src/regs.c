@@ -6,8 +6,6 @@
 
 sasm_regs regs = {0x00, 0x00, 0x00, 0x00};
 
-// SET
-
 void sasm_regs_setA(byte bytes) {
   regs.A = bytes;
 }
@@ -23,8 +21,6 @@ void sasm_regs_setC(byte bytes) {
 void sasm_regs_setD(byte bytes) {
   regs.D = bytes;
 }
-
-// BET
 
 byte sasm_regs_getA() {
   return regs.A;
