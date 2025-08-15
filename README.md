@@ -1,6 +1,30 @@
 # SASM (Simulated Assembly)
 - SASM is a simple operating system simulator that reads assembly language and does something.
 
+## JMP, CALL & RET
+### JMP
+- Jumps to a label and continues the flow there.
+- Usage:
+```asm
+main:
+  JMP some
+  MOV A, 0x00 ; Never execute
+some:
+  ; Continues from here...
+```
+
+### CALL & RET
+- Jumps to a label, but Returns to caller when done.
+- Usage:
+```asm
+main:
+  CALL some
+  MOV A, 0x00 ; After some returns, will be executed
+some:
+  ; Do something
+  RET ; Returns to caller (main)
+```
+
 ## Interrupts
 ### INT 0x80
 - Interrupt 80 is the Interrupt for #Syscalls.
